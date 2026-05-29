@@ -26,8 +26,9 @@ Thumbs.db
 npm-debug.log*
 
 # Data (user-specific)
-data/
+data/*
 !data/.gitkeep
+!data/**/.gitkeep
 
 # Temporary files
 *.tmp
