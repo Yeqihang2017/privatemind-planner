@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrivateMind Planner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>🧠 PrivateMind Planner</h1>
+      <p>本地隐私优先 AI 生活规划助理</p>
+    </header>
+
+    <!-- Chat Container -->
+    <div class="chat-container">
+      <!-- Messages -->
+      <div id="messages" class="messages">
+        <!-- Welcome message will be inserted here -->
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <textarea
+          id="userInput"
+          placeholder="告诉我你想做什么... (例如: 帮我规划21天完成AI项目)"
+          rows="3"
+        ></textarea>
+        <button id="sendBtn" onclick="sendMessage()">
+          发送
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span id="statusText">正在加载模型...</span>
+      <span id="connectionStatus" class="status-dot offline"></span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

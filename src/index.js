@@ -3,119 +3,53 @@
  * Local AI Life Planner using QVAC SDK
  */
 
-import {loadModel, unloadModel, completion, embed, QWEN3_1_7B_INST_Q4, GTE_LARGE_FP16} from '@qvac/sdk';
-
-// Model IDs (will be set after loading)
-let llmModelId = null;
-let embedModelId = null;
-
-/**
- * Load AI models
- */
-async function initializeModels() {
-  console.log('🧠 Loading AI models...');
-
-  // Load LLM model
-  console.log('📦 Loading LLM model (QWEN3_1_7B)...');
-  llmModelId = await loadModel({
-    modelSrc: QWEN3_1_7B_INST_Q4,
-    modelType: 'llm',
-    modelConfig: {
-      ctx_size: 4096,
-    },
-    onProgress: (progress) => {
-      process.stdout.write(`\r   LLM: ${progress.percentage.toFixed(1)}%`);
-    },
-  });
-  console.log(`\n✅ LLM model loaded: ${llmModelId}`);
-
-  // Load Embeddings model
-  console.log('📦 Loading Embeddings model (GTE_LARGE)...');
-  embedModelId = await loadModel({
-    modelSrc: GTE_LARGE_FP16,
-    modelType: 'embeddings',
-    onProgress: (progress) => {
-      process.stdout.write(`\r   Embeddings: ${progress.percentage.toFixed(1)}%`);
-    },
-  });
-  console.log(`\n✅ Embeddings model loaded: ${embedModelId}`);
-}
-
-/**
- * Test basic completion
- */
-async function testCompletion() {
-  console.log('\n🤖 Testing completion...');
-
-  const result = completion({
-    modelId: llmModelId,
-    history: [
-      {
-        role: 'user',
-        content: 'Hello! Who are you?',
-      },
-    ],
-    stream: true,
-  });
-
-  process.stdout.write('AI: ');
-  for await (const token of result.tokenStream) {
-    process.stdout.write(token);
-  }
-  console.log('\n');
-}
-
-/**
- * Test embeddings
- */
-async function testEmbeddings() {
-  console.log('🔢 Testing embeddings...');
-
-  const {embedding} = await embed({
-    modelId: embedModelId,
-    text: 'Hello, this is a test',
-  });
-
-  console.log(`✅ Embedding generated: ${embedding.length} dimensions`);
-  console.log(`   First 5 values: [${embedding.slice(0, 5).map(v => v.toFixed(4)).join(', ')}...]`);
-}
-
-/**
- * Cleanup models
- */
-async function cleanup() {
-  console.log('\n🧹 Cleaning up...');
-  if (llmModelId) {
-    await unloadModel({modelId: llmModelId});
-    console.log('✅ LLM model unloaded');
-  }
-  if (embedModelId) {
-    await unloadModel({modelId: embedModelId});
-    console.log('✅ Embeddings model unloaded');
-  }
-}
+import modelService from './services/model.js';
+import {startServer} from './web/server.js';
 
 /**
  * Main function
  */
 async function main() {
-  console.log('🚀 PrivateMind Planner - Development Test\n');
+  console.log('🚀 PrivateMind Planner - Starting...\n');
 
   try {
-    // Initialize models
-    await initializeModels();
+    // Initialize AI models
+    console.log('Step 1: Loading AI models...');
+    await modelService.initialize();
+    console.log('');
 
-    // Test completion
-    await testCompletion();
+    // Start web server
+    console.log('Step 2: Starting web server...');
+    await startServer();
+    console.log('');
 
-    // Test embeddings
-    await testEmbeddings();
+    // Print instructions
+    console.log('========================================');
+    console.log('✅ PrivateMind Planner is ready!');
+    console.log('========================================');
+    console.log('');
+    console.log('🌐 Open your browser and go to:');
+    console.log('   http://localhost:3000');
+    console.log('');
+    console.log('📡 API endpoints:');
+    console.log('   POST /api/chat     - Chat with AI');
+    console.log('   GET  /api/health   - Check status');
+    console.log('   GET  /api/welcome  - Get welcome message');
+    console.log('');
+    console.log('Press Ctrl+C to stop the server');
+    console.log('========================================');
 
-    console.log('\n✅ All tests passed!');
+    // Handle graceful shutdown
+    process.on('SIGINT', async () => {
+      console.log('\n\n🛑 Shutting down...');
+      await modelService.cleanup();
+      console.log('👋 Goodbye!');
+      process.exit(0);
+    });
   } catch (error) {
-    console.error('\n❌ Error:', error.message);
-  } finally {
-    await cleanup();
+    console.error('\n❌ Failed to start:', error.message);
+    console.error(error);
+    process.exit(1);
   }
 }
 
